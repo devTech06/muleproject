@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0e59c796-29ca-4e26-b61a-428e329502fd" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="f6dd9023-e15a-4e1c-a2e3-6427ea428985" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="sssssssss" database="db17" />
+	</db:config>
+	<flow name="error-handlerFlow" doc:id="1182c39c-cf89-4031-9944-474521e94e35" >
+		<http:listener doc:name="Listener" doc:id="b5a40317-dfd5-427b-9d85-e999918194bc" config-ref="HTTP_Listener_config" path="eh"/>
+		<logger level="INFO" doc:name="Logger" doc:id="1926e756-57bc-4581-9e84-b2781d716aee" message="first"/>
+		<try doc:name="Try" doc:id="69b7ae69-4ab3-4da2-bcd1-2249cb512dcd" >
+			<db:insert doc:name="Insert" doc:id="fc3c5676-2b9b-47bf-8c00-ea6e87e9fe49" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO table_name (id,name,number,lname)
+VALUES (:id, :name, :number, :lname);]]></db:sql>
+		</db:insert>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2bc026f9-3a24-474a-9535-fbb002bc325f" type="ANY">
+					<ee:transform doc:name="Transform Message" doc:id="6ffdd61e-ded7-4584-8bc4-0c9564f14277">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "please check log in credintials"
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="40038cc2-9195-4956-87e2-dac500261879" message="middle"/>
+		<logger level="INFO" doc:name="Logger" doc:id="89b16fd1-de3e-47c4-83f3-3472a02f43f2" message="last"/>
+	</flow>
+</mule>
